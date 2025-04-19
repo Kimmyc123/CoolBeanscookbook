@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulses: Cool Beans Clinical Trial Recipes</title>
+    <style>
+        :root {
+            --arizona-blue: #0C234B;
+            --arizona-red: #AB0520;
+            --white: #ffffff;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--white);
+            color: var(--arizona-blue);
+        }
+        
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 250px;
+            background-color: var(--arizona-blue);
+            color: var(--white);
+            padding: 20px 0;
+            position: fixed;
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .content {
+            flex: 1;
+            margin-left: 250px;
+            padding: 20px;
+        }
+        
+        header {
+            background-color: var(--arizona-red);
+            color: var(--white);
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+        }
+        
+        .nav-item {
+            cursor: pointer;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            user-select: none;
+        }
+        
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .nav-item.active {
+            background-color: var(--arizona-red);
+        }
+        
+        .nav-item-tree {
+            padding-left: 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .nav-item-tree.open {
+            max-height: 500px;
+        }
+        
+        .tree-item {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+        
+        .tree-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .tree-item.active {
+            background-color: rgba(171, 5, 32, 0.7);
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .recipe-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .recipe-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .recipe-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .recipe-image {
+            width: 100%;
+            height: 200px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+        }
+        
+        .recipe-content {
+            padding: 15px;
+        }
+        
+        .recipe-title {
+            font-size: 1.2rem;
+            margin: 0 0 10px 0;
+            color: var(--arizona-blue);
+        }
+        
+        .recipe-description {
+            color: #666;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+        
+        .about-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .author-image {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            border: 3px solid var(--arizona-red);
+        }
+        
+        .author-bio {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            min-height: 200px;
+        }
+        
+        .nav-toggle {
+            display: none;
+            background-color: var(--arizona-blue);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            border-radius: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 999;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .content {
+                margin-left: 0;
+            }
+            
+            .nav-toggle {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="nav-toggle" id="navToggle">☰</button>
+    
+    <div class="container">
+        <aside class="sidebar" id="sidebar">
+            <div class="nav-item" data-target="home">Home</div>
+            
+            <div class="nav-item tree-parent">
+                Breakfast Recipes
+                <div class="nav-item-tree">
+                    <div class="tree-item" data-target="breakfast-bean">Bean Breakfast Recipes</div>
+                    <div class="tree-item" data-target="breakfast-lentil">Lentil Breakfast Recipes</div>
+                    <div class="tree-item" data-target="breakfast-pea">Pea Breakfast Recipes</div>
+                </div>
+            </div>
+            
+            <div class="nav-item tree-parent">
+                Lunch Recipes
+                <div class="nav-item-tree">
+                    <div class="tree-item" data-target="lunch-bean">Bean Lunch Recipes</div>
+                    <div class="tree-item" data-target="lunch-lentil">Lentil Lunch Recipes</div>
+                    <div class="tree-item" data-target="lunch-pea">Pea Lunch Recipes</div>
+                </div>
+            </div>
+            
+            <div class="nav-item tree-parent">
+                Dinner Recipes
+                <div class="nav-item-tree">
+                    <div class="tree-item" data-target="dinner-bean">Bean Dinner Recipes</div>
+                    <div class="tree-item" data-target="dinner-lentil">Lentil Dinner Recipes</div>
+                    <div class="tree-item" data-target="dinner-pea">Pea Dinner Recipes</div>
+                </div>
+            </div>
+            
+            <div class="nav-item tree-parent">
+                Snack Recipes
+                <div class="nav-item-tree">
+                    <div class="tree-item" data-target="snack-bean">Bean Snack Recipes</div>
+                    <div class="tree-item" data-target="snack-lentil">Lentil Snack Recipes</div>
+                    <div class="tree-item" data-target="snack-pea">Pea Snack Recipes</div>
+                </div>
+            </div>
+            
+            <div class="nav-item" data-target="about">About the Author</div>
+             <div class="nav-item-tree">
+                    <div class="tree-item" data-target="snack-bean">Bean Snack Recipes</div>
+                    <div class="tree-item" data-target="snack-lentil">Lentil Snack Recipes</div>
+                    <div class="tree-item" data-target="snack-pea">Pea Snack Recipes</div>
+                </div>
+        </aside>
+        
+        <main class="content">
+            <header>
+                <h1>Pulses: Cool Beans Clinical Trial Recipes</h1>
+            </header>
+            
+            <div id="home" class="page active">
+                <h2>Welcome to Pulses: Cool Beans Clinical Trial Recipes</h2>
+                <p>Explore our collection of delicious and nutritious pulse-based recipes developed specifically for the University of Arizona's Cool Beans Clinical Trial.</p>
+                
+                <h3>Featured Recipes</h3>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Bean Breakfast Bowl">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Bean Breakfast Bowl</h3>
+                            <p class="recipe-description">Start your day with this protein-packed breakfast bowl featuring black beans, avocado, and eggs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Curry">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Curry</h3>
+                            <p class="recipe-description">A hearty and flavorful dinner option that's rich in protein and fiber.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Chickpea Salad">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Chickpea Salad</h3>
+                            <p class="recipe-description">A refreshing lunch option perfect for hot summer days.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="breakfast-bean" class="page">
+                <h2>Bean Breakfast Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Black Bean Breakfast Bowl">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Black Bean Breakfast Bowl</h3>
+                            <p class="recipe-description">Start your day with this protein-packed breakfast bowl featuring black beans, avocado, and eggs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Pinto Bean Breakfast Burrito">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Pinto Bean Breakfast Burrito</h3>
+                            <p class="recipe-description">A delicious and filling breakfast wrap with pinto beans, scrambled eggs, and vegetables.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Navy Bean Breakfast Hash">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Navy Bean Breakfast Hash</h3>
+                            <p class="recipe-description">A savory breakfast hash combining navy beans with sweet potatoes and bell peppers.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="breakfast-lentil" class="page">
+                <h2>Lentil Breakfast Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Pancakes">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Pancakes</h3>
+                            <p class="recipe-description">High-protein pancakes made with red lentils and whole wheat flour.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Breakfast Patties">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Breakfast Patties</h3>
+                            <p class="recipe-description">Savory breakfast patties made with green lentils, herbs, and spices.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Oatmeal">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Oatmeal</h3>
+                            <p class="recipe-description">A unique twist on traditional oatmeal with red lentils for added protein.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="breakfast-pea" class="page">
+                <h2>Pea Breakfast Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Split Pea Breakfast Soup">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Split Pea Breakfast Soup</h3>
+                            <p class="recipe-description">A warming breakfast soup with yellow split peas, vegetables, and herbs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Chickpea Flour Pancakes">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Chickpea Flour Pancakes</h3>
+                            <p class="recipe-description">Gluten-free savory pancakes made with chickpea flour and vegetables.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Green Pea Breakfast Smoothie">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Green Pea Breakfast Smoothie</h3>
+                            <p class="recipe-description">A nutritious smoothie with green peas, banana, spinach, and plant-based milk.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Lunch Pages -->
+            <div id="lunch-bean" class="page">
+                <h2>Bean Lunch Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Bean Burrito Bowl">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Bean Burrito Bowl</h3>
+                            <p class="recipe-description">A filling lunch bowl with black beans, rice, avocado, and fresh vegetables.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="White Bean Salad">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">White Bean Salad</h3>
+                            <p class="recipe-description">A Mediterranean-inspired salad with cannellini beans, cucumber, tomato, and herbs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Black Bean Soup">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Black Bean Soup</h3>
+                            <p class="recipe-description">A hearty and flavorful soup perfect for cold days.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="lunch-lentil" class="page">
+                <h2>Lentil Lunch Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Salad">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Salad</h3>
+                            <p class="recipe-description">A protein-packed salad with green lentils, roasted vegetables, and feta cheese.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Wrap">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Wrap</h3>
+                            <p class="recipe-description">A filling wrap with spiced lentils, hummus, and fresh vegetables.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Red Lentil Soup">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Red Lentil Soup</h3>
+                            <p class="recipe-description">A comforting soup with red lentils, carrots, and warming spices.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="lunch-pea" class="page">
+                <h2>Pea Lunch Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Chickpea Salad Sandwich">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Chickpea Salad Sandwich</h3>
+                            <p class="recipe-description">A plant-based sandwich filling made with mashed chickpeas, herbs, and vegetables.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Split Pea Soup">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Split Pea Soup</h3>
+                            <p class="recipe-description">A classic soup made with green split peas, carrots, and celery.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Green Pea Hummus">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Green Pea Hummus</h3>
+                            <p class="recipe-description">A vibrant dip made with green peas, tahini, and lemon juice. Perfect with vegetable sticks.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dinner Pages -->
+            <div id="dinner-bean" class="page">
+                <h2>Bean Dinner Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Black Bean Burger">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Black Bean Burger</h3>
+                            <p class="recipe-description">A hearty plant-based burger made with black beans, oats, and spices.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Three Bean Chili">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Three Bean Chili</h3>
+                            <p class="recipe-description">A hearty chili made with black beans, kidney beans, and pinto beans.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="White Bean Pasta">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">White Bean Pasta</h3>
+                            <p class="recipe-description">A creamy pasta dish featuring white beans, garlic, and lemon.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="dinner-lentil" class="page">
+                <h2>Lentil Dinner Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Curry">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Curry</h3>
+                            <p class="recipe-description">A flavorful curry made with red lentils, coconut milk, and warming spices.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Shepherd's Pie">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Shepherd's Pie</h3>
+                            <p class="recipe-description">A plant-based version of the classic dish with green lentils and vegetable filling.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Bolognese">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Bolognese</h3>
+                            <p class="recipe-description">A hearty pasta sauce made with brown lentils, tomatoes, and Italian herbs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="dinner-pea" class="page">
+                <h2>Pea Dinner Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Chickpea Curry">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Chickpea Curry</h3>
+                            <p class="recipe-description">A flavorful curry made with chickpeas, tomatoes, and Indian spices.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Split Pea Stew">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Split Pea Stew</h3>
+                            <p class="recipe-description">A hearty stew made with yellow split peas, vegetables, and herbs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Green Pea Risotto">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Green Pea Risotto</h3>
+                            <p class="recipe-description">A creamy risotto with green peas, Parmesan cheese, and fresh herbs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Snack Pages -->
+            <div id="snack-bean" class="page">
+                <h2>Bean Snack Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Bean Dip">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Bean Dip</h3>
+                            <p class="recipe-description">A flavorful dip made with refried beans, cheese, and spices.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Roasted Chickpeas">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Roasted Chickpeas</h3>
+                            <p class="recipe-description">Crunchy roasted chickpeas with your choice of spices.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Black Bean Brownies">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Black Bean Brownies</h3>
+                            <p class="recipe-description">Fudgy brownies made with black beans for added protein and fiber.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="snack-lentil" class="page">
+                <h2>Lentil Snack Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Crackers">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Crackers</h3>
+                            <p class="recipe-description">Crispy crackers made with red lentil flour and herbs.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Hummus">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Hummus</h3>
+                            <p class="recipe-description">A twist on traditional hummus made with cooked red lentils.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Lentil Energy Balls">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Lentil Energy Balls</h3>
+                            <p class="recipe-description">No-bake energy balls made with cooked lentils, dates, and nuts.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="snack-pea" class="page">
+                <h2>Pea Snack Recipes</h2>
+                <div class="recipe-grid">
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Wasabi Peas">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Wasabi Peas</h3>
+                            <p class="recipe-description">Crunchy green peas coated with wasabi and salt.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Chickpea Cookie Dough">
+                        </div>
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">Chickpea Cookie Dough</h3>
+                            <p class="recipe-description">Edible cookie dough made with chickpeas, nut butter, and chocolate chips.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="recipe-card">
+                        <div class="recipe-image">
+                            <img src="/api/placeholder/400/320" alt="Green Pea Guacamole">
+                        </div>
+                        
+                        <div class="recipe-content">
+                            <h3 class="recipe-title">
+                                </div>
+                                </div>
+                                </div>
+                                <script>
+        // Function to handle page navigation
+        function navigateToPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show the selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // On mobile, close the sidebar after navigation
+            if (window.innerWidth <= 768) {
+                document.getElementById('sidebar').classList.remove('open');
+            }
+            
+            // Remove active class from all navigation items
+            document.querySelectorAll('.nav-item, .tree-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to the clicked item
+            const clickedItem = document.querySelector(`[data-target="${pageId}"]`);
+            if (clickedItem) {
+                clickedItem.classList.add('active');
+                
+                // If it's a tree item, make sure its parent tree is open
+                if (clickedItem.classList.contains('tree-item')) {
+                    const parentTree = clickedItem.closest('.nav-item-tree');
+                    if (parentTree) {
+                        parentTree.classList.add('open');
+                    }
+                }
+            }
+        }
+
+        // Handle tree menu toggles
+        document.querySelectorAll('.tree-parent').forEach(parent => {
+            parent.addEventListener('click', function(e) {
+                // Only toggle if the click is directly on the parent, not on a child
+                if (e.target === this || e.target.classList.contains('tree-parent')) {
+                    const treeMenu = this.querySelector('.nav-item-tree');
+                    treeMenu.classList.toggle('open');
+                }
+            });
+        });
+
+        // Handle navigation item clicks
+        document.querySelectorAll('.nav-item:not(.tree-parent), .tree-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const targetPageId = this.getAttribute('data-target');
+                if (targetPageId) {
+                    navigateToPage(targetPageId);
+                }
+            });
+        });
+
+        // Handle mobile menu toggle
+        document.getElementById('navToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('open');
+        });
+
+        // Initialize the page (show home by default)
+        navigateToPage('home');
+        
+    </script>
+</body>
+</html>
+</div>
+<div id="about" class="page" style="text-align: center; max-width: 800px; margin: 0 auto;">  
+    <h2 style="color: #333; margin: 0 0 10px 0;">About the Author</h2>  
+      
+    <div class="author-image" style="margin: 10px auto; display: flex; justify-content: center;">  
+        <img src="https://media.licdn.com/dms/image/v2/D4E03AQHYaQYqJsjNVw/profile-displayphoto-shrink_800_800/B4EZWOyCoOHMAc-/0/1741857237948?e=1748476800&v=beta&t=QKZM_cTgIPMPjxKIGE45HMp67RMbgnbv3qyFl4PFf0g"   
+             alt="Author Photo"   
+             style="border-radius: 50%; width: 200px; height: 200px; object-fit: cover; display: block; margin: 0 auto;">  
+    </div>  
+      
+    <div class="author-bio">  
+        <h3 style="color: #444; margin: 10px 0;">Kimberly A. Ceus</h3>  
+        <p style="margin-bottom: 1rem; line-height: 1.6;">Kimberly "Kimmy" Ceus is a bold advocate for holistic wellness and integrative science, blending cultural wisdom with cutting-edge nutrition research to drive change at both personal and systemic levels. With roots in Haitian, heritage, she brings an unapologetic authenticity and global perspective to everything she does.</p>  
+          
+        <p style="margin-bottom: 1rem; line-height: 1.6;">Based in Tucson Arizona, Kimmy is a Nutritional Scientist, a vegan wellness enthusiast, and a lifelong learner who's just as comfortable decoding clinical research as she is leading a fitness class or developing plant-based therapeutic concepts. Her professional journey spans clinical trials, community nutrition programs, and digital health innovation, with a mission to reimagine how we heal—mind, body, and soul.</p>  
+          
+        <p style="margin-bottom: 1rem; line-height: 1.6;">She is currently pursuing a PhD in the School of Nutritional Sciences and Wellness at the University of Arizona to deepen her understanding of nutrition's role in disease prevention and treatment. Her research explores the potential of exercise and nutrition-based strategies to support metabolic health, enhance quality of life, and reduce the risk of chronic diseases across diverse populations.</p>  
+          
+        <p style="margin-bottom: 1rem; line-height: 1.6;">She thrives at the intersection of science and spirit, research and revolution, using her voice and visibility to challenge norms, elevate underserved communities, and inspire radical self-empowerment.</p>  
+          
+        <p style="margin-bottom: 1rem; line-height: 1.6;">Kimmy Ceus isn't just studying science—she's reshaping it.</p>  
+    </div>  
+  
+    <div style="margin-top: 10px;">  
+        <a href="https://www.linkedin.com/in/kimberlya-ceus/"   
+           target="_blank"   
+           style="display: inline-block;   
+                  background-color: #0077B5;   
+                  color: white;   
+                  padding: 10px 20px;   
+                  border-radius: 25px;   
+                  text-decoration: none;   
+                  font-size: 14px;  
+                  transition: background-color 0.3s ease;">  
+            <i class="fab fa-linkedin"></i> Connect on LinkedIn  
+        </a>  
+    </div>  
+</div>  
+      
+   
+</div>  
+    </div>
+</div>
+                                    </script>  
+</body>  
+</html>  
